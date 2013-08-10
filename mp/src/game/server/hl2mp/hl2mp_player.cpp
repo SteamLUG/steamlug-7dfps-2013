@@ -107,7 +107,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
 
 	m_iSpawnInterpCounter = 0;
 
-    m_bEnterObserver = false;
+	m_bEnterObserver = false;
 	m_bReady = false;
 
 	BaseClass::ChangeTeam( 0 );
@@ -196,9 +196,9 @@ void CHL2MP_Player::GiveAllItems( void )
 
 void CHL2MP_Player::GiveDefaultItems( void )
 {
-	EquipSuit();
+	//EquipSuit();
 
-	CBasePlayer::GiveAmmo( 255,	"Pistol");
+	/*CBasePlayer::GiveAmmo( 255,	"Pistol");
 	CBasePlayer::GiveAmmo( 45,	"SMG1");
 	CBasePlayer::GiveAmmo( 1,	"grenade" );
 	CBasePlayer::GiveAmmo( 6,	"Buckshot");
@@ -216,9 +216,11 @@ void CHL2MP_Player::GiveDefaultItems( void )
 	GiveNamedItem( "weapon_pistol" );
 	GiveNamedItem( "weapon_smg1" );
 	GiveNamedItem( "weapon_frag" );
-	GiveNamedItem( "weapon_physcannon" );
+	GiveNamedItem( "weapon_physcannon" ); */
+	CBasePlayer::GiveAmmo( 100,	"oil" );
+	GiveNamedItem("weapon_lantern");
 
-	const char *szDefaultWeaponName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_defaultweapon" );
+	/*const char *szDefaultWeaponName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_defaultweapon" );
 
 	CBaseCombatWeapon *pDefaultWeapon = Weapon_OwnsThisType( szDefaultWeaponName );
 
@@ -227,9 +229,9 @@ void CHL2MP_Player::GiveDefaultItems( void )
 		Weapon_Switch( pDefaultWeapon );
 	}
 	else
-	{
-		Weapon_Switch( Weapon_OwnsThisType( "weapon_physcannon" ) );
-	}
+	{*/
+		Weapon_Switch( Weapon_OwnsThisType( "weapon_lantern" ) );
+	/*}*/
 }
 
 void CHL2MP_Player::PickDefaultSpawnTeam( void )
@@ -1415,7 +1417,7 @@ CON_COMMAND( timeleft, "prints the time remaining in the match" )
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer( UTIL_GetCommandClient() );
 
 	int iTimeRemaining = (int)HL2MPRules()->GetMapRemainingTime();
-    
+	
 	if ( iTimeRemaining == 0 )
 	{
 		if ( pPlayer )
