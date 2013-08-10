@@ -484,6 +484,41 @@ LINK_ENTITY_TO_CLASS(item_ar2_grenade, CItem_AR2_Grenade);
 LINK_ENTITY_TO_CLASS(item_ammo_smg1_grenade, CItem_AR2_Grenade);
 
 // ========================================================================
+//	>> CItem_BoxOil
+// ========================================================================
+class CItem_BoxOil : public CItem
+{
+public:
+	DECLARE_CLASS( CItem_BoxOil, CItem );
+
+	void Precache( void )
+	{
+		PrecacheModel ("models/items/crossbowrounds.mdl");
+	}
+
+	void Spawn( void )
+	{ 
+		Precache( );
+		SetModel( "models/items/crossbowrounds.mdl");
+		BaseClass::Spawn( );
+	}
+
+	bool MyTouch( CBasePlayer *pPlayer )
+	{
+		if (ITEM_GiveAmmo( pPlayer, SIZE_AMMO_OIL, "oil" ))
+		{
+			if ( g_pGameRules->ItemShouldRespawn( this ) == GR_ITEM_RESPAWN_NO )
+			{
+				UTIL_Remove(this);	
+			}	
+			return true;
+		}
+		return false;
+	}
+};
+LINK_ENTITY_TO_CLASS(item_ammo_oil, CItem_BoxOil);
+
+// ========================================================================
 //	>> BoxSniperRounds
 // ========================================================================
 #define SIZE_BOX_SNIPER_ROUNDS 10
@@ -605,6 +640,7 @@ enum
 	AMMOCRATE_357,
 	AMMOCRATE_CROSSBOW,
 	AMMOCRATE_AR2_ALTFIRE,
+	AMMOCRATE_OIL,
 	AMMOCRATE_SMG_ALTFIRE,
 	NUM_AMMO_CRATE_TYPES,
 };
@@ -692,6 +728,9 @@ const char *CItem_AmmoCrate::m_lpzModelNames[NUM_AMMO_CRATE_TYPES] =
 	
 	//FIXME: This model is incorrect!
 	"models/items/ammocrate_ar2.mdl",		// Combine Ball 
+
+	// TODO: OIL!
+	"models/items/ammocrate_ar2.mdl",
 	"models/items/ammocrate_smg2.mdl",	    // smg grenade
 };
 
@@ -707,6 +746,7 @@ const char *CItem_AmmoCrate::m_lpzAmmoNames[NUM_AMMO_CRATE_TYPES] =
 	"357",
 	"XBowBolt",
 	"AR2AltFire",
+	"oil"
 	"SMG1_Grenade",
 };
 
@@ -722,6 +762,7 @@ int CItem_AmmoCrate::m_nAmmoAmounts[NUM_AMMO_CRATE_TYPES] =
 	50,		// 357
 	50,		// Crossbow
 	3,		// AR2 alt-fire
+	100,	// Lantern Oil
 	5,
 };
 
@@ -737,6 +778,7 @@ const char *CItem_AmmoCrate::m_pGiveWeapon[NUM_AMMO_CRATE_TYPES] =
 	NULL,		// Crossbow
 	NULL,		// AR2 alt-fire
 	NULL,		// SMG alt-fire
+	NULL,
 };
 
 #define	AMMO_CRATE_CLOSE_DELAY	1.5f
