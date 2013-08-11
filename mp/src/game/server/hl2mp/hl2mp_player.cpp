@@ -342,42 +342,22 @@ bool CHL2MP_Player::ValidatePlayerModel( const char *pModel )
 void CHL2MP_Player::SetPlayerTeamModel( void )
 {
 	const char *szModelName = NULL;
-	szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
-
-	int modelIndex = modelinfo->GetModelIndex( szModelName );
-
-	if ( modelIndex == -1 || ValidatePlayerModel( szModelName ) == false )
-	{
-		szModelName = "models/Combine_Soldier.mdl";
-		m_iModelType = TEAM_HUMANS;
-
-		char szReturnString[512];
-
-		Q_snprintf( szReturnString, sizeof (szReturnString ), "cl_playermodel %s\n", szModelName );
-		engine->ClientCommand ( edict(), szReturnString );
-	}
 
 	if ( GetTeamNumber() == TEAM_HUMANS )
 	{
-		if ( Q_stristr( szModelName, "models/human") )
-		{
-			int nHeads = ARRAYSIZE( g_ppszRandomHumansModels );
-		
-			g_iLastHumanModel = ( g_iLastHumanModel + 1 ) % nHeads;
-			szModelName = g_ppszRandomHumansModels[g_iLastHumanModel];
-		}
+		int nHeads = ARRAYSIZE( g_ppszRandomHumansModels );
+
+		g_iLastHumanModel = ( g_iLastHumanModel + 1 ) % nHeads;
+		szModelName = g_ppszRandomHumansModels[g_iLastHumanModel];
 
 		m_iModelType = TEAM_HUMANS;
 	}
 	else if ( GetTeamNumber() == TEAM_GHOSTS )
 	{
-		if ( !Q_stristr( szModelName, "models/human") )
-		{
-			int nHeads = ARRAYSIZE( g_ppszRandomGhostsModels );
+		int nHeads = ARRAYSIZE( g_ppszRandomGhostsModels );
 
-			g_iLastGhostModel = ( g_iLastGhostModel + 1 ) % nHeads;
-			szModelName = g_ppszRandomGhostsModels[g_iLastGhostModel];
-		}
+		g_iLastGhostModel = ( g_iLastGhostModel + 1 ) % nHeads;
+		szModelName = g_ppszRandomGhostsModels[g_iLastGhostModel];
 
 		m_iModelType = TEAM_GHOSTS;
 	}
@@ -425,19 +405,6 @@ void CHL2MP_Player::SetPlayerModel( void )
 		{
 			m_iModelType = TEAM_HUMANS;
 		}
-	}
-
-	int modelIndex = modelinfo->GetModelIndex( szModelName );
-
-	if ( modelIndex == -1 )
-	{
-		szModelName = "models/Combine_Soldier.mdl";
-		m_iModelType = TEAM_HUMANS;
-
-		char szReturnString[512];
-
-		Q_snprintf( szReturnString, sizeof (szReturnString ), "cl_playermodel %s\n", szModelName );
-		engine->ClientCommand ( edict(), szReturnString );
 	}
 
 	SetModel( szModelName );
