@@ -28,8 +28,8 @@
 
 enum
 {
-	TEAM_COMBINE = 2,
-	TEAM_REBELS,
+	TEAM_HUMANS = 2,
+	TEAM_GHOSTS,
 };
 
 
@@ -142,15 +142,13 @@ public:
 
 	void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 
-	
-	bool	IsTeamplay( void ) { return m_bTeamPlayEnabled;	}
+	bool	IsTeamplay( void ) { return true; }
 	void	CheckAllPlayersReady( void );
 
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
 	
 private:
 	
-	CNetworkVar( bool, m_bTeamPlayEnabled );
 	CNetworkVar( float, m_flGameStartTime );
 	CUtlVector<EHANDLE> m_hRespawnableItemsAndWeapons;
 	float m_tmNextPeriodicThink;

@@ -26,11 +26,11 @@
 
 #include "ilagcompensationmanager.h"
 
-int g_iLastCitizenModel = 0;
-int g_iLastCombineModel = 0;
+int g_iLastGhostModel = 0;
+int g_iLastHumanModel = 0;
 
-CBaseEntity	 *g_pLastCombineSpawn = NULL;
-CBaseEntity	 *g_pLastRebelSpawn = NULL;
+CBaseEntity	 *g_pLastHumanSpawn = NULL;
+CBaseEntity	 *g_pLastGhostSpawn = NULL;
 extern CBaseEntity				*g_pLastSpawn;
 
 #define HL2MP_COMMAND_MAX_RATE 0.3
@@ -39,8 +39,8 @@ void DropPrimedFragGrenade( CHL2MP_Player *pPlayer, CBaseCombatWeapon *pGrenade 
 
 LINK_ENTITY_TO_CLASS( player, CHL2MP_Player );
 
-LINK_ENTITY_TO_CLASS( info_player_combine, CPointEntity );
-LINK_ENTITY_TO_CLASS( info_player_rebel, CPointEntity );
+LINK_ENTITY_TO_CLASS( info_player_human, CPointEntity );
+LINK_ENTITY_TO_CLASS( info_player_ghost, CPointEntity );
 
 IMPLEMENT_SERVERCLASS_ST(CHL2MP_Player, DT_HL2MP_Player)
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 11, SPROP_CHANGES_OFTEN ),
@@ -60,33 +60,21 @@ END_SEND_TABLE()
 BEGIN_DATADESC( CHL2MP_Player )
 END_DATADESC()
 
-const char *g_ppszRandomCitizenModels[] = 
+const char *g_ppszRandomHumansModels[] =
 {
-	"models/humans/group03/male_01.mdl",
-	"models/humans/group03/male_02.mdl",
-	"models/humans/group03/female_01.mdl",
-	"models/humans/group03/male_03.mdl",
-	"models/humans/group03/female_02.mdl",
-	"models/humans/group03/male_04.mdl",
-	"models/humans/group03/female_03.mdl",
-	"models/humans/group03/male_05.mdl",
-	"models/humans/group03/female_04.mdl",
-	"models/humans/group03/male_06.mdl",
-	"models/humans/group03/female_06.mdl",
-	"models/humans/group03/male_07.mdl",
-	"models/humans/group03/female_07.mdl",
-	"models/humans/group03/male_08.mdl",
-	"models/humans/group03/male_09.mdl",
+		"models/humans/group03/female_01.mdl",
+		"models/humans/group03/female_02.mdl",
+		"models/humans/group03/female_03.mdl",
+		"models/humans/group03/female_04.mdl",
+		"models/humans/group03/female_06.mdl",
+		"models/humans/group03/female_07.mdl",
+
 };
 
-const char *g_ppszRandomCombineModels[] =
+const char *g_ppszRandomGhostsModels[] =
 {
-	"models/combine_soldier.mdl",
-	"models/combine_soldier_prisonguard.mdl",
-	"models/combine_super_soldier.mdl",
-	"models/police.mdl",
+		"models/police.mdl",
 };
-
 
 #define MAX_COMBINE_MODELS 4
 #define MODEL_CHANGE_INTERVAL 5.0f
@@ -137,18 +125,18 @@ void CHL2MP_Player::Precache( void )
 
 	PrecacheModel ( "sprites/glow01.vmt" );
 
-	//Precache Citizen models
-	int nHeads = ARRAYSIZE( g_ppszRandomCitizenModels );
+	//Precache Human models
+	int nHeads = ARRAYSIZE( g_ppszRandomGhostsModels );
 	int i;	
 
 	for ( i = 0; i < nHeads; ++i )
-	   	 PrecacheModel( g_ppszRandomCitizenModels[i] );
+	   	 PrecacheModel( g_ppszRandomGhostsModels[i] );
 
-	//Precache Combine Models
-	nHeads = ARRAYSIZE( g_ppszRandomCombineModels );
+	//Precache Ghosts Models
+	nHeads = ARRAYSIZE( g_ppszRandomHumansModels );
 
 	for ( i = 0; i < nHeads; ++i )
-	   	 PrecacheModel( g_ppszRandomCombineModels[i] );
+	   	 PrecacheModel( g_ppszRandomHumansModels[i] );
 
 	PrecacheFootStepSounds();
 
@@ -236,49 +224,34 @@ void CHL2MP_Player::GiveDefaultItems( void )
 
 void CHL2MP_Player::PickDefaultSpawnTeam( void )
 {
+	char szReturnString[128];
+
+
 	if ( GetTeamNumber() == 0 )
 	{
-		if ( HL2MPRules()->IsTeamplay() == false )
+		CTeam *pHumans = g_Teams[TEAM_HUMANS];
+		CTeam *pGhosts = g_Teams[TEAM_GHOSTS];
+
+		if ( pHumans == NULL || pGhosts == NULL )
 		{
-			if ( GetModelPtr() == NULL )
-			{
-				const char *szModelName = NULL;
-				szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
+			Q_snprintf( szReturnString, sizeof( szReturnString ), "No teams yet, joining ghost");
+			ClientPrint( this, HUD_PRINTTALK, szReturnString );
 
-				if ( ValidatePlayerModel( szModelName ) == false )
-				{
-					char szReturnString[512];
-
-					Q_snprintf( szReturnString, sizeof (szReturnString ), "cl_playermodel models/combine_soldier.mdl\n" );
-					engine->ClientCommand ( edict(), szReturnString );
-				}
-
-				ChangeTeam( TEAM_UNASSIGNED );
-			}
+			ChangeTeam( TEAM_GHOSTS );
 		}
 		else
 		{
-			CTeam *pCombine = g_Teams[TEAM_COMBINE];
-			CTeam *pRebels = g_Teams[TEAM_REBELS];
-
-			if ( pCombine == NULL || pRebels == NULL )
+			if ( pGhosts->GetNumPlayers() == 0 )
 			{
-				ChangeTeam( random->RandomInt( TEAM_COMBINE, TEAM_REBELS ) );
+				Q_snprintf( szReturnString, sizeof( szReturnString ), "No ghost, joining as ghost");
+				ClientPrint( this, HUD_PRINTTALK, szReturnString );
+				ChangeTeam( TEAM_GHOSTS );
 			}
 			else
 			{
-				if ( pCombine->GetNumPlayers() > pRebels->GetNumPlayers() )
-				{
-					ChangeTeam( TEAM_REBELS );
-				}
-				else if ( pCombine->GetNumPlayers() < pRebels->GetNumPlayers() )
-				{
-					ChangeTeam( TEAM_COMBINE );
-				}
-				else
-				{
-					ChangeTeam( random->RandomInt( TEAM_COMBINE, TEAM_REBELS ) );
-				}
+				Q_snprintf( szReturnString, sizeof( szReturnString ), "Already a ghost, joining as human");
+				ClientPrint( this, HUD_PRINTTALK, szReturnString );
+				ChangeTeam( TEAM_HUMANS );
 			}
 		}
 	}
@@ -342,22 +315,22 @@ void CHL2MP_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 
 bool CHL2MP_Player::ValidatePlayerModel( const char *pModel )
 {
-	int iModels = ARRAYSIZE( g_ppszRandomCitizenModels );
+	int iModels = ARRAYSIZE( g_ppszRandomGhostsModels );
 	int i;	
 
 	for ( i = 0; i < iModels; ++i )
 	{
-		if ( !Q_stricmp( g_ppszRandomCitizenModels[i], pModel ) )
+		if ( !Q_stricmp( g_ppszRandomGhostsModels[i], pModel ) )
 		{
 			return true;
 		}
 	}
 
-	iModels = ARRAYSIZE( g_ppszRandomCombineModels );
+	iModels = ARRAYSIZE( g_ppszRandomHumansModels );
 
 	for ( i = 0; i < iModels; ++i )
 	{
-	   	if ( !Q_stricmp( g_ppszRandomCombineModels[i], pModel ) )
+	   	if ( !Q_stricmp( g_ppszRandomHumansModels[i], pModel ) )
 		{
 			return true;
 		}
@@ -376,7 +349,7 @@ void CHL2MP_Player::SetPlayerTeamModel( void )
 	if ( modelIndex == -1 || ValidatePlayerModel( szModelName ) == false )
 	{
 		szModelName = "models/Combine_Soldier.mdl";
-		m_iModelType = TEAM_COMBINE;
+		m_iModelType = TEAM_HUMANS;
 
 		char szReturnString[512];
 
@@ -384,29 +357,29 @@ void CHL2MP_Player::SetPlayerTeamModel( void )
 		engine->ClientCommand ( edict(), szReturnString );
 	}
 
-	if ( GetTeamNumber() == TEAM_COMBINE )
+	if ( GetTeamNumber() == TEAM_HUMANS )
 	{
 		if ( Q_stristr( szModelName, "models/human") )
 		{
-			int nHeads = ARRAYSIZE( g_ppszRandomCombineModels );
+			int nHeads = ARRAYSIZE( g_ppszRandomHumansModels );
 		
-			g_iLastCombineModel = ( g_iLastCombineModel + 1 ) % nHeads;
-			szModelName = g_ppszRandomCombineModels[g_iLastCombineModel];
+			g_iLastHumanModel = ( g_iLastHumanModel + 1 ) % nHeads;
+			szModelName = g_ppszRandomHumansModels[g_iLastHumanModel];
 		}
 
-		m_iModelType = TEAM_COMBINE;
+		m_iModelType = TEAM_HUMANS;
 	}
-	else if ( GetTeamNumber() == TEAM_REBELS )
+	else if ( GetTeamNumber() == TEAM_GHOSTS )
 	{
 		if ( !Q_stristr( szModelName, "models/human") )
 		{
-			int nHeads = ARRAYSIZE( g_ppszRandomCitizenModels );
+			int nHeads = ARRAYSIZE( g_ppszRandomGhostsModels );
 
-			g_iLastCitizenModel = ( g_iLastCitizenModel + 1 ) % nHeads;
-			szModelName = g_ppszRandomCitizenModels[g_iLastCitizenModel];
+			g_iLastGhostModel = ( g_iLastGhostModel + 1 ) % nHeads;
+			szModelName = g_ppszRandomGhostsModels[g_iLastGhostModel];
 		}
 
-		m_iModelType = TEAM_REBELS;
+		m_iModelType = TEAM_GHOSTS;
 	}
 	
 	SetModel( szModelName );
@@ -418,57 +391,39 @@ void CHL2MP_Player::SetPlayerTeamModel( void )
 void CHL2MP_Player::SetPlayerModel( void )
 {
 	const char *szModelName = NULL;
-	const char *pszCurrentModelName = modelinfo->GetModelName( GetModel());
 
-	szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
-
-	if ( ValidatePlayerModel( szModelName ) == false )
+	if ( GetTeamNumber() == TEAM_HUMANS )
 	{
-		char szReturnString[512];
-
-		if ( ValidatePlayerModel( pszCurrentModelName ) == false )
-		{
-			pszCurrentModelName = "models/Combine_Soldier.mdl";
-		}
-
-		Q_snprintf( szReturnString, sizeof (szReturnString ), "cl_playermodel %s\n", pszCurrentModelName );
-		engine->ClientCommand ( edict(), szReturnString );
-
-		szModelName = pszCurrentModelName;
-	}
-
-	if ( GetTeamNumber() == TEAM_COMBINE )
-	{
-		int nHeads = ARRAYSIZE( g_ppszRandomCombineModels );
+		int nHeads = ARRAYSIZE( g_ppszRandomHumansModels );
 		
-		g_iLastCombineModel = ( g_iLastCombineModel + 1 ) % nHeads;
-		szModelName = g_ppszRandomCombineModels[g_iLastCombineModel];
+		g_iLastHumanModel = ( g_iLastHumanModel + 1 ) % nHeads;
+		szModelName = g_ppszRandomHumansModels[g_iLastHumanModel];
 
-		m_iModelType = TEAM_COMBINE;
+		m_iModelType = TEAM_HUMANS;
 	}
-	else if ( GetTeamNumber() == TEAM_REBELS )
+	else if ( GetTeamNumber() == TEAM_GHOSTS )
 	{
-		int nHeads = ARRAYSIZE( g_ppszRandomCitizenModels );
+		int nHeads = ARRAYSIZE( g_ppszRandomGhostsModels );
 
-		g_iLastCitizenModel = ( g_iLastCitizenModel + 1 ) % nHeads;
-		szModelName = g_ppszRandomCitizenModels[g_iLastCitizenModel];
+		g_iLastGhostModel = ( g_iLastGhostModel + 1 ) % nHeads;
+		szModelName = g_ppszRandomGhostsModels[g_iLastGhostModel];
 
-		m_iModelType = TEAM_REBELS;
+		m_iModelType = TEAM_GHOSTS;
 	}
 	else
 	{
 		if ( Q_strlen( szModelName ) == 0 ) 
 		{
-			szModelName = g_ppszRandomCitizenModels[0];
+			szModelName = g_ppszRandomGhostsModels[0];
 		}
 
 		if ( Q_stristr( szModelName, "models/human") )
 		{
-			m_iModelType = TEAM_REBELS;
+			m_iModelType = TEAM_GHOSTS;
 		}
 		else
 		{
-			m_iModelType = TEAM_COMBINE;
+			m_iModelType = TEAM_HUMANS;
 		}
 	}
 
@@ -477,7 +432,7 @@ void CHL2MP_Player::SetPlayerModel( void )
 	if ( modelIndex == -1 )
 	{
 		szModelName = "models/Combine_Soldier.mdl";
-		m_iModelType = TEAM_COMBINE;
+		m_iModelType = TEAM_HUMANS;
 
 		char szReturnString[512];
 
@@ -656,7 +611,7 @@ bool CHL2MP_Player::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, co
 
 Activity CHL2MP_Player::TranslateTeamActivity( Activity ActToTranslate )
 {
-	if ( m_iModelType == TEAM_COMBINE )
+	if ( m_iModelType == TEAM_HUMANS )
 		 return ActToTranslate;
 	
 	if ( ActToTranslate == ACT_RUN )
@@ -903,32 +858,18 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 
 	bool bKill = false;
 
-	if ( HL2MPRules()->IsTeamplay() != true && iTeam != TEAM_SPECTATOR )
+	if ( iTeam != GetTeamNumber() && GetTeamNumber() != TEAM_UNASSIGNED )
 	{
-		//don't let them try to join combine or rebels during deathmatch.
-		iTeam = TEAM_UNASSIGNED;
-	}
-
-	if ( HL2MPRules()->IsTeamplay() == true )
-	{
-		if ( iTeam != GetTeamNumber() && GetTeamNumber() != TEAM_UNASSIGNED )
-		{
-			bKill = true;
-		}
+		bKill = true;
 	}
 
 	BaseClass::ChangeTeam( iTeam );
 
 	m_flNextTeamChangeTime = gpGlobals->curtime + TEAM_CHANGE_INTERVAL;
 
-	if ( HL2MPRules()->IsTeamplay() == true )
-	{
-		SetPlayerTeamModel();
-	}
-	else
-	{
-		SetPlayerModel();
-	}
+
+	SetPlayerTeamModel();
+
 
 	if ( iTeam == TEAM_SPECTATOR )
 	{
@@ -943,75 +884,9 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 	}
 }
 
-bool CHL2MP_Player::HandleCommand_JoinTeam( int team )
-{
-	if ( !GetGlobalTeam( team ) || team == 0 )
-	{
-		Warning( "HandleCommand_JoinTeam( %d ) - invalid team index.\n", team );
-		return false;
-	}
-
-	if ( team == TEAM_SPECTATOR )
-	{
-		// Prevent this is the cvar is set
-		if ( !mp_allowspectators.GetInt() )
-		{
-			ClientPrint( this, HUD_PRINTCENTER, "#Cannot_Be_Spectator" );
-			return false;
-		}
-
-		if ( GetTeamNumber() != TEAM_UNASSIGNED && !IsDead() )
-		{
-			m_fNextSuicideTime = gpGlobals->curtime;	// allow the suicide to work
-
-			CommitSuicide();
-
-			// add 1 to frags to balance out the 1 subtracted for killing yourself
-			IncrementFragCount( 1 );
-		}
-
-		ChangeTeam( TEAM_SPECTATOR );
-
-		return true;
-	}
-	else
-	{
-		StopObserverMode();
-		State_Transition(STATE_ACTIVE);
-	}
-
-	// Switch their actual team...
-	ChangeTeam( team );
-
-	return true;
-}
-
 bool CHL2MP_Player::ClientCommand( const CCommand &args )
 {
-	if ( FStrEq( args[0], "spectate" ) )
-	{
-		if ( ShouldRunRateLimitedCommand( args ) )
-		{
-			// instantly join spectators
-			HandleCommand_JoinTeam( TEAM_SPECTATOR );	
-		}
-		return true;
-	}
-	else if ( FStrEq( args[0], "jointeam" ) ) 
-	{
-		if ( args.ArgC() < 2 )
-		{
-			Warning( "Player sent bad jointeam syntax\n" );
-		}
-
-		if ( ShouldRunRateLimitedCommand( args ) )
-		{
-			int iTeam = atoi( args[1] );
-			HandleCommand_JoinTeam( iTeam );
-		}
-		return true;
-	}
-	else if ( FStrEq( args[0], "joingame" ) )
+	if ( FStrEq( args[0], "joingame" ) )
 	{
 		return true;
 	}
@@ -1319,25 +1194,23 @@ CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint( void )
 	edict_t		*player = edict();
 	const char *pSpawnpointName = "info_player_deathmatch";
 
-	if ( HL2MPRules()->IsTeamplay() == true )
+	if ( GetTeamNumber() == TEAM_HUMANS )
 	{
-		if ( GetTeamNumber() == TEAM_COMBINE )
-		{
-			pSpawnpointName = "info_player_combine";
-			pLastSpawnPoint = g_pLastCombineSpawn;
-		}
-		else if ( GetTeamNumber() == TEAM_REBELS )
-		{
-			pSpawnpointName = "info_player_rebel";
-			pLastSpawnPoint = g_pLastRebelSpawn;
-		}
-
-		if ( gEntList.FindEntityByClassname( NULL, pSpawnpointName ) == NULL )
-		{
-			pSpawnpointName = "info_player_deathmatch";
-			pLastSpawnPoint = g_pLastSpawn;
-		}
+		pSpawnpointName = "info_player_human";
+		pLastSpawnPoint = g_pLastHumanSpawn;
 	}
+	else if ( GetTeamNumber() == TEAM_GHOSTS )
+	{
+		pSpawnpointName = "info_player_ghost";
+		pLastSpawnPoint = g_pLastGhostSpawn;
+	}
+
+	if ( gEntList.FindEntityByClassname( NULL, pSpawnpointName ) == NULL )
+	{
+		pSpawnpointName = "info_player_deathmatch";
+		pLastSpawnPoint = g_pLastSpawn;
+	}
+
 
 	pSpot = pLastSpawnPoint;
 	// Randomize the start spot
@@ -1392,16 +1265,14 @@ CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint( void )
 
 ReturnSpot:
 
-	if ( HL2MPRules()->IsTeamplay() == true )
+
+	if ( GetTeamNumber() == TEAM_HUMANS )
 	{
-		if ( GetTeamNumber() == TEAM_COMBINE )
-		{
-			g_pLastCombineSpawn = pSpot;
-		}
-		else if ( GetTeamNumber() == TEAM_REBELS ) 
-		{
-			g_pLastRebelSpawn = pSpot;
-		}
+		g_pLastHumanSpawn = pSpot;
+	}
+	else if ( GetTeamNumber() == TEAM_GHOSTS )
+	{
+		g_pLastGhostSpawn = pSpot;
 	}
 
 	g_pLastSpawn = pSpot;

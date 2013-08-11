@@ -47,8 +47,8 @@ ConVar sv_report_client_settings("sv_report_client_settings", "0", FCVAR_GAMEDLL
 
 extern ConVar mp_chattime;
 
-extern CBaseEntity	 *g_pLastCombineSpawn;
-extern CBaseEntity	 *g_pLastRebelSpawn;
+extern CBaseEntity	 *g_pLastHumanSpawn;
+extern CBaseEntity	 *g_pLastGhostSpawn;
 
 #define WEAPON_MAX_DISTANCE_FROM_SPAWN 64
 
@@ -58,12 +58,6 @@ extern CBaseEntity	 *g_pLastRebelSpawn;
 REGISTER_GAMERULES_CLASS( CHL2MPRules );
 
 BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )
-
-	#ifdef CLIENT_DLL
-		RecvPropBool( RECVINFO( m_bTeamPlayEnabled ) ),
-	#else
-		SendPropBool( SENDINFO( m_bTeamPlayEnabled ) ),
-	#endif
 
 END_NETWORK_TABLE()
 
@@ -113,8 +107,8 @@ static const char *s_PreserveEnts[] =
 	"info_target",
 	"info_node_hint",
 	"info_player_deathmatch",
-	"info_player_combine",
-	"info_player_rebel",
+	"info_player_human",
+	"info_player_ghost",
 	"info_map_parameters",
 	"keyframe_rope",
 	"move_rope",
@@ -179,8 +173,8 @@ char *sTeamNames[] =
 {
 	"Unassigned",
 	"Spectator",
-	"Combine",
-	"Rebels",
+	"Humans",
+	"Ghosts",
 };
 
 CHL2MPRules::CHL2MPRules()
@@ -195,7 +189,6 @@ CHL2MPRules::CHL2MPRules()
 		g_Teams.AddToTail( pTeam );
 	}
 
-	m_bTeamPlayEnabled = teamplay.GetBool();
 	m_flIntermissionEndTime = 0.0f;
 	m_flGameStartTime = 0;
 
@@ -237,8 +230,8 @@ void CHL2MPRules::CreateStandardEntities( void )
 
 	BaseClass::CreateStandardEntities();
 
-	g_pLastCombineSpawn = NULL;
-	g_pLastRebelSpawn = NULL;
+	g_pLastHumanSpawn = NULL;
+	g_pLastGhostSpawn = NULL;
 
 #ifdef DBGFLAG_ASSERT
 	CBaseEntity *pEnt = 
@@ -323,31 +316,15 @@ void CHL2MPRules::Think( void )
 
 	if ( flFragLimit )
 	{
-		if( IsTeamplay() == true )
-		{
-			CTeam *pCombine = g_Teams[TEAM_COMBINE];
-			CTeam *pRebels = g_Teams[TEAM_REBELS];
+		CTeam *pHumans = g_Teams[TEAM_HUMANS];
+		CTeam *pGhosts = g_Teams[TEAM_GHOSTS];
 
-			if ( pCombine->GetScore() >= flFragLimit || pRebels->GetScore() >= flFragLimit )
-			{
-				GoToIntermission();
-				return;
-			}
-		}
-		else
+		if ( pHumans->GetScore() >= flFragLimit || pGhosts->GetScore() >= flFragLimit )
 		{
-			// check if any player is over the frag limit
-			for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-			{
-				CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-
-				if ( pPlayer && pPlayer->FragCount() >= flFragLimit )
-				{
-					GoToIntermission();
-					return;
-				}
-			}
+			GoToIntermission();
+			return;
 		}
+
 	}
 
 	if ( gpGlobals->curtime > m_tmNextPeriodicThink )
@@ -786,27 +763,13 @@ void CHL2MPRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 			return;
 		}
 
-		if ( HL2MPRules()->IsTeamplay() == false )
+		if ( Q_stristr( szModelName, "models/human") )
 		{
-			pHL2Player->SetPlayerModel();
-
-			const char *pszCurrentModelName = modelinfo->GetModelName( pHL2Player->GetModel() );
-
-			char szReturnString[128];
-			Q_snprintf( szReturnString, sizeof( szReturnString ), "Your player model is: %s\n", pszCurrentModelName );
-
-			ClientPrint( pHL2Player, HUD_PRINTTALK, szReturnString );
+			pHL2Player->ChangeTeam( TEAM_HUMANS );
 		}
 		else
 		{
-			if ( Q_stristr( szModelName, "models/human") )
-			{
-				pHL2Player->ChangeTeam( TEAM_REBELS );
-			}
-			else
-			{
-				pHL2Player->ChangeTeam( TEAM_COMBINE );
-			}
+			pHL2Player->ChangeTeam( TEAM_GHOSTS );
 		}
 	}
 	if ( sv_report_client_settings.GetInt() == 1 )
@@ -838,10 +801,7 @@ int CHL2MPRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget 
 
 const char *CHL2MPRules::GetGameDescription( void )
 { 
-	if ( IsTeamplay() )
-		return "Team Deathmatch"; 
-
-	return "Deathmatch"; 
+	return "Humans vs Ghosts";
 } 
 
 bool CHL2MPRules::IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer )
@@ -1031,17 +991,17 @@ void CHL2MPRules::RestartGame()
 
 	// Respawn entities (glass, doors, etc..)
 
-	CTeam *pRebels = GetGlobalTeam( TEAM_REBELS );
-	CTeam *pCombine = GetGlobalTeam( TEAM_COMBINE );
+	CTeam *pHumans = GetGlobalTeam( TEAM_HUMANS );
+	CTeam *pGhosts = GetGlobalTeam( TEAM_GHOSTS );
 
-	if ( pRebels )
+	if ( pHumans )
 	{
-		pRebels->SetScore( 0 );
+		pHumans->SetScore( 0 );
 	}
 
-	if ( pCombine )
+	if ( pGhosts )
 	{
-		pCombine->SetScore( 0 );
+		pGhosts->SetScore( 0 );
 	}
 
 	m_flIntermissionEndTime = 0;
