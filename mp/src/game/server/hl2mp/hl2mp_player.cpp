@@ -1467,3 +1467,16 @@ bool CHL2MP_Player::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
 
 	return true;
 }
+
+
+void CHL2MP_Player::Touch( CBaseEntity *pOther )
+{
+	CBasePlayer* pOtherPlayer = dynamic_cast<CBasePlayer*>(pOther);
+	if (pOtherPlayer) {
+		if (GetTeamNumber() == TEAM_GHOSTS && pOtherPlayer->GetTeamNumber() == TEAM_HUMANS) {
+			const CTakeDamageInfo death(this, this, 1000.0f, DMG_SHOCK);
+			pOtherPlayer->TakeDamage(death);
+		}
+	}
+
+}

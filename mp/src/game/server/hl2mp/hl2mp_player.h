@@ -74,7 +74,8 @@ public:
 	virtual void UpdateOnRemove( void );
 	virtual void DeathSound( const CTakeDamageInfo &info );
 	virtual CBaseEntity* EntSelectSpawnPoint( void );
-		
+	virtual void Touch( CBaseEntity *pOther );
+
 	int FlashlightIsOn( void );
 	void FlashlightTurnOn( void );
 	void FlashlightTurnOff( void );
