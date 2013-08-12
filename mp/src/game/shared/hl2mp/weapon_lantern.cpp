@@ -1216,6 +1216,7 @@ protected:
 	float	m_flCheckSuppressTime;		// Amount of time to suppress the checking for targets
 	bool	m_flLastDenySoundPlayed;	// Debounce for deny sound
 	int		m_nAttack2Debounce;
+	int		m_nAttack1Debounce;			// Allows to wait for the user to release the button before triggering again.
 
 	CNetworkVar( bool,	m_bActive );
 	CNetworkVar( int,	m_EffectState );		// Current state of the effects on the gun
@@ -1226,7 +1227,6 @@ protected:
 	float	m_flElementDebounce;
 	
 	bool m_bActiveLight;
-	float m_flStateChangeTime;
 
 	CSoundPatch			*m_sndMotor;		// Whirring sound for the gun
 	
@@ -1322,7 +1322,6 @@ CWeaponLantern::CWeaponLantern( void )
 	m_EffectState			= (int)EFFECT_NONE;
 	m_flLastDenySoundPlayed	= false;
 	m_bActiveLight = false;
-	m_flStateChangeTime = 0.0f;
 
 #ifdef CLIENT_DLL
 	m_nOldEffectState		= EFFECT_NONE;
@@ -2606,7 +2605,7 @@ void CWeaponLantern::ItemPostFrame()
 	if ( pOwner == NULL )
 	{
 		// We found an object. Debounce the button
-		//m_nAttack2Debounce = 0;
+		m_nAttack1Debounce = 0;
 		return;
 	}
 
@@ -2628,11 +2627,11 @@ void CWeaponLantern::ItemPostFrame()
 
 			m_nChangeState = ELEMENT_STATE_NONE;
 		}
-	}
+	}*/
 
 	// NOTE: Attack2 will be considered to be pressed until the first item is picked up.
-	int nAttack2Mask = pOwner->m_nButtons & (~m_nAttack2Debounce);
-	if ( nAttack2Mask & IN_ATTACK2 )
+	//int nAttack2Mask = pOwner->m_nButtons & (~m_nAttack2Debounce);
+	/*if ( nAttack2Mask & IN_ATTACK2 )
 	{
 		SecondaryAttack();
 	}
@@ -2645,19 +2644,20 @@ void CWeaponLantern::ItemPostFrame()
 		{
 			DoEffect( EFFECT_READY );
 		}
-	}
-	
-	if (( pOwner->m_nButtons & IN_ATTACK2 ) == 0 )
-	{
-		m_nAttack2Debounce = 0;
 	}*/
+	
+	int nAttack1Mask = pOwner->m_nButtons & (~m_nAttack1Debounce);
+	
+	if (( pOwner->m_nButtons & IN_ATTACK ) == 0 )
+	{
+		m_nAttack1Debounce = 0;
+	}
 
 	// Light on or off the lantern.
-	if ( pOwner->m_nButtons & IN_ATTACK  && m_flStateChangeTime < gpGlobals->curtime)
+	if ( nAttack1Mask & IN_ATTACK )
 	{
-		// TODO: Add a debouncer so we wait for the button to be released
 		m_bActiveLight = !m_bActiveLight;
-		m_flStateChangeTime = gpGlobals->curtime + 0.5f;
+		m_nAttack1Debounce |= pOwner->m_nButtons;
 	}
 	
 	// If the lantern is lighted use it's ammo till possible, else
