@@ -70,6 +70,7 @@ bool CBaseCombatCharacter::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmo
 //-----------------------------------------------------------------------------
 bool CBaseCombatCharacter::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 {
+    return false;
 	if (IsPlayer())
 	{
 		CBasePlayer *pPlayer = (CBasePlayer *)this;
