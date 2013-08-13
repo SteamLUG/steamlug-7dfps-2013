@@ -2675,6 +2675,43 @@ void CWeaponLantern::ItemPostFrame()
 		{
 			m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 			DryFire();
+			
+			//Create our trace_t class to hold the end result
+			trace_t tr;
+			 
+			//Create Vectors for the start, stop, and direction
+			Vector vecAbsStart, vecAbsEnd, vecDir;
+			 
+			//Take the Player's EyeAngles and turn it into a direction
+			AngleVectors( pOwner->EyeAngles(), &vecDir );
+			 
+			//Get the Start/End
+			vecAbsStart = pOwner->EyePosition();
+			vecAbsEnd = vecAbsStart + (vecDir * MAX_TRACE_LENGTH);
+			 
+			//Do the TraceLine, and write our results to our trace_t class, tr.
+			UTIL_TraceLine( vecAbsStart, vecAbsEnd, MASK_ALL, pOwner, COLLISION_GROUP_NONE, &tr );
+			 
+			//Do something with the end results
+			if ( tr.m_pEnt )
+			{
+				if ( tr.m_pEnt->IsPlayer() )
+				{
+					CBasePlayer * player = (CBasePlayer*)tr.m_pEnt;
+					//Msg("speed %f\n", player->GetPlayerMaxSpeed());
+					//Msg("TraceLine hit a Player!\n");
+					player->SetMaxSpeed(20);
+					
+					
+					/*if(tr.m_pEnt->GetTeamNumber() == TEAM_GHOSTS)
+					{
+						Msg("TraceLine hit a GHOST!!!!ANNOY IT!\n");						
+					}*/
+				}
+			}
+			
+			
+			
 			pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
 			
 			//        PrimaryAttack();
