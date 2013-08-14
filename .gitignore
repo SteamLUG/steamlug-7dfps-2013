@@ -79,3 +79,9 @@ autoexec.cfg
 # Editor backups
 *~
 *.kate-swp
+
+# Extra Backup Save Files For Blender
+*.blend1
+*.blend2
+*.blend3
+*.blend4
