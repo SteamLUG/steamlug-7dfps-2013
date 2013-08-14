@@ -1480,3 +1480,16 @@ void CHL2MP_Player::Touch( CBaseEntity *pOther )
 	}
 
 }
+
+void CHL2MP_Player::SetMaxSpeed( float flMaxSpeed )
+{
+	if (GetTeamNumber() == TEAM_GHOSTS)
+	{
+		BaseClass::SetMaxSpeed(100.0f);
+	}
+	else
+	{
+		BaseClass::SetMaxSpeed(flMaxSpeed);
+	}
+}
+

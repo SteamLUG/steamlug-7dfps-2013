@@ -75,6 +75,7 @@ public:
 	virtual void DeathSound( const CTakeDamageInfo &info );
 	virtual CBaseEntity* EntSelectSpawnPoint( void );
 	virtual void Touch( CBaseEntity *pOther );
+	virtual void SetMaxSpeed( float flMaxSpeed );
 
 	int FlashlightIsOn( void );
 	void FlashlightTurnOn( void );
