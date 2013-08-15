@@ -50,6 +50,7 @@
 
 #define	SPRITE_SCALE	128.0f
 
+
 static const char *s_pWaitForUpgradeContext = "WaitForUpgrade";
 
 ConVar	g_debug_lantern( "g_debug_lantern", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
@@ -1050,6 +1051,8 @@ private:
 #define CWeaponLantern C_WeaponLantern
 #endif
 
+#define EFFECTS_PER_OIL_PCT 5
+
 class CWeaponLantern : public CBaseHL2MPCombatWeapon
 {
 public:
@@ -1227,6 +1230,8 @@ protected:
 	float	m_flElementDebounce;
 	
 	bool m_bActiveLight;
+	
+	int m_iEffectsApplied;
 
 	CSoundPatch			*m_sndMotor;		// Whirring sound for the gun
 	
@@ -1322,6 +1327,7 @@ CWeaponLantern::CWeaponLantern( void )
 	m_EffectState			= (int)EFFECT_NONE;
 	m_flLastDenySoundPlayed	= false;
 	m_bActiveLight = false;
+	m_iEffectsApplied = 0;
 
 #ifdef CLIENT_DLL
 	m_nOldEffectState		= EFFECT_NONE;
@@ -1539,6 +1545,7 @@ bool CWeaponLantern::Holster( CBaseCombatWeapon *pSwitchingTo )
 void CWeaponLantern::DryFire( void )
 {
 	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
+	DoEffect( EFFECT_HOLDING );
 
 	WeaponSound( EMPTY );
 	
@@ -2673,7 +2680,7 @@ void CWeaponLantern::ItemPostFrame()
 		}
 		else
 		{
-			m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
+			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2f;
 			DryFire();
 			
 			//Create our trace_t class to hold the end result
@@ -2697,28 +2704,39 @@ void CWeaponLantern::ItemPostFrame()
 			{
 				if ( tr.m_pEnt->IsPlayer() )
 				{
-					CBasePlayer * player = (CBasePlayer*)tr.m_pEnt;
-					//Msg("speed %f\n", player->GetPlayerMaxSpeed());
-					//Msg("TraceLine hit a Player!\n");
-					player->SetMaxSpeed(20);
-					
-					
-					/*if(tr.m_pEnt->GetTeamNumber() == TEAM_GHOSTS)
+					if(tr.m_pEnt->GetTeamNumber() != pOwner->GetTeamNumber())
 					{
-						Msg("TraceLine hit a GHOST!!!!ANNOY IT!\n");						
-					}*/
+						CBasePlayer * player = (CBasePlayer*)tr.m_pEnt;
+						// Remove 10% per hit.
+						player->SetMaxSpeed(player->MaxSpeed()-(player->MaxSpeed()/10));
+						#ifndef CLIENT_DLL
+						UTIL_ClientPrintAll( HUD_PRINTCENTER, "A ghost was slowed down" );
+						#endif
+					}
 				}
 			}
-			
-			
-			
-			pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
+
+			// Allow an "ammo" of oil to last more than one round.
+			if(m_iEffectsApplied > EFFECTS_PER_OIL_PCT)
+			{
+				pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
+				m_iEffectsApplied = 0;
+			}
+			else
+			{
+				m_iEffectsApplied++;
+			}
 			
 			//        PrimaryAttack();
 		}
 	}
 	else 
 	{
+		
+		if(m_bActiveLight)
+			DoEffect( EFFECT_HOLDING );
+		else
+			DoEffect( EFFECT_NONE );
 		WeaponIdle();
 	}
 }
