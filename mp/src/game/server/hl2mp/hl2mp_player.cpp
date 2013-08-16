@@ -1499,7 +1499,7 @@ void CHL2MP_Player::SetMaxSpeed( float flMaxSpeed )
 
 		if(flMaxSpeed < 99.0f)
 		{
-			m_flSpeedRestoreTime = gpGlobals->curtime + 20.0f;
+			m_flSpeedRestoreTime = gpGlobals->curtime + 5.0f;
 		}
 	}
 }
