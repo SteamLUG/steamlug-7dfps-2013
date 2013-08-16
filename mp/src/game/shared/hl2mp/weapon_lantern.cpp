@@ -2666,8 +2666,8 @@ void CWeaponLantern::ItemPostFrame()
 		m_bActiveLight = !m_bActiveLight;
 		m_nAttack1Debounce |= pOwner->m_nButtons;
 		
-		//if(m_bActiveLight) pOwner->FlashlightTurnOn();
-		//else               pOwner->FlashlightTurnOff();
+		if(m_bActiveLight) pOwner->AddEffects( EF_DIMLIGHT );
+		else               pOwner->RemoveEffects( EF_DIMLIGHT );
 	}
 	
 	// If the lantern is lighted use it's ammo till possible, else
@@ -2679,7 +2679,7 @@ void CWeaponLantern::ItemPostFrame()
 				m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 				WeaponIdle();
 				m_bActiveLight = false; // power off.
-				//pOwner->FlashlightTurnOff();
+				pOwner->RemoveEffects( EF_DIMLIGHT );
 
 		}
 		else
