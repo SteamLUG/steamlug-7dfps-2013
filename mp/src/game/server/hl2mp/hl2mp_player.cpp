@@ -97,6 +97,8 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
 
 	m_bEnterObserver = false;
 	m_bReady = false;
+	
+	m_flSpeedRestoreTime = 0.0f;
 
 	BaseClass::ChangeTeam( 0 );
 	
@@ -205,8 +207,12 @@ void CHL2MP_Player::GiveDefaultItems( void )
 	GiveNamedItem( "weapon_smg1" );
 	GiveNamedItem( "weapon_frag" );
 	GiveNamedItem( "weapon_physcannon" ); */
-	CBasePlayer::GiveAmmo( 100,	"oil" );
-	GiveNamedItem("weapon_lantern");
+	if(GetTeamNumber() != TEAM_GHOSTS)
+	{
+		CBasePlayer::GiveAmmo( 100,	"oil" );
+		GiveNamedItem("weapon_lantern");
+		Weapon_Switch( Weapon_OwnsThisType( "weapon_lantern" ) );
+	}
 
 	/*const char *szDefaultWeaponName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_defaultweapon" );
 
@@ -218,7 +224,7 @@ void CHL2MP_Player::GiveDefaultItems( void )
 	}
 	else
 	{*/
-		Weapon_Switch( Weapon_OwnsThisType( "weapon_lantern" ) );
+		//Weapon_Switch( Weapon_OwnsThisType( "weapon_lantern" ) );
 	/*}*/
 }
 
@@ -1483,13 +1489,38 @@ void CHL2MP_Player::Touch( CBaseEntity *pOther )
 
 void CHL2MP_Player::SetMaxSpeed( float flMaxSpeed )
 {
-	if (GetTeamNumber() == TEAM_GHOSTS)
+	if (GetTeamNumber() != TEAM_GHOSTS)
 	{
 		BaseClass::SetMaxSpeed(100.0f);
 	}
 	else
 	{
 		BaseClass::SetMaxSpeed(flMaxSpeed);
+
+		if(flMaxSpeed < 99.0f)
+		{
+			m_flSpeedRestoreTime = gpGlobals->curtime + 20.0f;
+		}
 	}
 }
+
+void CHL2MP_Player::ItemPostFrame()
+{
+	BaseClass::ItemPostFrame();
+
+	if(m_flSpeedRestoreTime > 1.0f && MaxSpeed() < 99.0f && gpGlobals->curtime > m_flSpeedRestoreTime)
+	{
+		SetMaxSpeed(100.0f);
+		m_flSpeedRestoreTime = 0.0f;
+		#ifndef CLIENT_DLL
+		UTIL_ClientPrintAll( HUD_PRINTCENTER, "A ghost has regained speed" );
+		UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "A ghost has regained speed" );
+		#endif
+		
+	}	
+}
+
+// NOTE TO TEST EASILY ON SINGLE SERVER INVERT THE GETTEAMNUMBER() != TEAM_GHOSTS LOGIC
+
+
 

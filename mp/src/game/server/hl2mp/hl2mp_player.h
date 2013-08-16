@@ -137,6 +137,9 @@ public:
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
 
 	virtual bool	CanHearAndReadChatFrom( CBasePlayer *pPlayer );
+    
+protected:
+    	virtual void		ItemPostFrame();
 
 		
 private:
@@ -153,6 +156,8 @@ private:
 	float m_flNextTeamChangeTime;
 
 	float m_flSlamProtectTime;	
+    
+    float m_flSpeedRestoreTime;
 
 	HL2MPPlayerState m_iPlayerState;
 	CHL2MPPlayerStateInfo *m_pCurStateInfo;

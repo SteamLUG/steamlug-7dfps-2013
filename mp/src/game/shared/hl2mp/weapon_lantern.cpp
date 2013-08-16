@@ -2665,6 +2665,9 @@ void CWeaponLantern::ItemPostFrame()
 	{
 		m_bActiveLight = !m_bActiveLight;
 		m_nAttack1Debounce |= pOwner->m_nButtons;
+		
+		//if(m_bActiveLight) pOwner->FlashlightTurnOn();
+		//else               pOwner->FlashlightTurnOff();
 	}
 	
 	// If the lantern is lighted use it's ammo till possible, else
@@ -2676,6 +2679,7 @@ void CWeaponLantern::ItemPostFrame()
 				m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 				WeaponIdle();
 				m_bActiveLight = false; // power off.
+				//pOwner->FlashlightTurnOff();
 
 		}
 		else
@@ -2711,6 +2715,7 @@ void CWeaponLantern::ItemPostFrame()
 						player->SetMaxSpeed(player->MaxSpeed()-(player->MaxSpeed()/10));
 						#ifndef CLIENT_DLL
 						UTIL_ClientPrintAll( HUD_PRINTCENTER, "A ghost was slowed down" );
+						UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "A ghost was slowed down" );
 						#endif
 					}
 				}
