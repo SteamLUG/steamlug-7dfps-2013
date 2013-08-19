@@ -20,11 +20,11 @@ cmake_policy(SET CMP0015 NEW)
 
 #-----------------------------------------------------------------------------
 
-SET(CMAKE_FIND_LIBRARY_PREFIXES "lib")
-SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".so")
+SET(CMAKE_FIND_LIBRARY_PREFIXES "")
+SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
 #-----------------------------------------------------------------------------
 
-add_subdirectory(utils)
-add_subdirectory(lib)
-
+add_subdirectory(vbsp)
+add_subdirectory(vvis)
+add_subdirectory(vrad)

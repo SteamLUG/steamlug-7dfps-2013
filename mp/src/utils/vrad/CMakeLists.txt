@@ -115,3 +115,5 @@ set(LINK_LIBS
     tier0 vstdlib) # End LINK_LIBS
 
 target_link_libraries(vrad ${LINK_LIBS})
+
+install(TARGETS vrad DESTINATION ${CMAKE_SOURCE_DIR}/../game/bin)

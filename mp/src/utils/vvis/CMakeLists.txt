@@ -92,3 +92,5 @@ set(LINK_LIBS
     tier0 vstdlib) # End LINK_LIBS
 
 target_link_libraries(vvis ${LINK_LIBS})
+
+install(TARGETS vvis DESTINATION ${CMAKE_SOURCE_DIR}/../game/bin)

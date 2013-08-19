@@ -21,8 +21,8 @@ cmake_policy(SET CMP0015 NEW)
 
 #-----------------------------------------------------------------------------
 
-SET(CMAKE_FIND_LIBRARY_PREFIXES "")
-SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+SET(CMAKE_FIND_LIBRARY_PREFIXES "lib")
+SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".so")
 
 #-----------------------------------------------------------------------------
 
@@ -129,3 +129,6 @@ set(LINK_LIBS
     tier0 vstdlib) # End LINK_LIBS
 
 target_link_libraries(vbsp ${LINK_LIBS})
+
+install(TARGETS vbsp DESTINATION ${CMAKE_SOURCE_DIR}/../game/bin)
+
