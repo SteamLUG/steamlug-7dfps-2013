@@ -73,9 +73,7 @@ mp/game/mod_hl2mp/voice_ban.dt
 # mod build dir
 mp/game/mod_hl2mp/bin/
 mp/game/bin
-mp/src/utils/vbsp/build/
-mp/src/utils/vvis/build/
-mp/src/utils/vrad/build/
+build/
 
 # user generated configs
 autoexec.cfg
