@@ -84,11 +84,11 @@ add_executable(vvis ${SRC})
 
 # LINK_LIBS
 set(LINK_LIBS
-    /home/salamanderrake/src/valve/sortie/mp/src/lib/public/linux32/tier1.a
-    /home/salamanderrake/src/valve/sortie/mp/src/lib/public/linux32//tier2.a
-    /home/salamanderrake/src/valve/sortie/mp/src/lib/public/linux32/mathlib.a
-    /home/salamanderrake/src/valve/sortie/mp/src/lib/public/linux32/vtf.a
-    /home/salamanderrake/src/valve/sortie/mp/src/lib/public/linux32/bitmap.a
+    ${CMAKE_SOURCE_DIR}/lib/public/linux32/tier1.a
+    ${CMAKE_SOURCE_DIR}/lib/public/linux32/tier2.a
+    ${CMAKE_SOURCE_DIR}/lib/public/linux32/mathlib.a
+    ${CMAKE_SOURCE_DIR}/lib/public/linux32/vtf.a
+    ${CMAKE_SOURCE_DIR}/lib/public/linux32//bitmap.a
     tier0 vstdlib) # End LINK_LIBS
 
 target_link_libraries(vvis ${LINK_LIBS})
