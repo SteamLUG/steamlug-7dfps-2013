@@ -1,0 +1,9 @@
+The files mp/src/utils/{vbsp,vvis,vrad}/CMakeLists.txt are there for example purposes only since 
+they will not compile with haunt they way it is not. The only repo they will build with now is
+found here 
+
+https://github.com/sortie/source-sdk-2013/tree/for-valve-posix-port-vbsp-vvis-vrad
+
+it is in his for-valve-posix-port-vbsp-vvis-vrad branch. Also the LINK_LIBS needs to be modified
+to point to the sdks libraries located at {SDK_ROOT}/mp/src/libs/public/linux32 so you will have
+to adjust it to point to them with an absoulute path.
