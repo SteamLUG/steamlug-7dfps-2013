@@ -72,6 +72,8 @@ mp/game/mod_hl2mp/voice_ban.dt
 
 # mod build dir
 mp/game/mod_hl2mp/bin/
+mp/game/bin
+build/
 
 # user generated configs
 autoexec.cfg
@@ -82,6 +84,14 @@ autoexec.cfg
 
 # Extra Backup Save Files For Blender
 *.blend[0-9]
-# *.blend2
-# *.blend3
-# *.blend4
+
+# Map files which need to go into assets
+*.bsp
+
+# Archives that do not need to be tracked
+*.tar.bz2
+*.tar.gz
+*.tar
+*.gz
+*.bz2
+
