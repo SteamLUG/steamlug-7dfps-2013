@@ -85,3 +85,12 @@ autoexec.cfg
 # Extra Backup Save Files For Blender
 *.blend[0-9]
 
+# Map files which need to go into assets
+*.bsp
+
+# Archives that do not need to be tracked
+*.tar.bz2
+*.tar.gz
+*.tar
+*.gz
+*.bz2
